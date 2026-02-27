@@ -1,1 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Click MOM</title>
 
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: skyblue;
+}
+header {
+    background: #2c3e50;
+    color: rgb(104, 196, 142);
+    padding: 12px;
+    text-align: center;
+}
+.container {
+    width: 90%;
+    margin: auto;
+    padding: 18px;
+}
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+button {
+    background: #70aa88;
+    color: rgb(255, 132, 75);
+    font-weight: bold;
+    cursor: pointer;
+}
+button:hover {
+    background: #ffb171;
+}
+.section-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #799ec4;
+}
+.dashboard-box {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.stat {
+    background: #ecf0f1;
+    padding: 15px;
+    border-radius: 8px;
+    width: 23%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>One Click MOM</h1>
+    <p>Intelligent Minutes of Meeting System</p>
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div class="card">
+    <div class="section-title">Login</div>
+    <input type="email" placeholder="Email">
+    <input type="password" placeholder="Password">
+    <button>Login</button>
+    <button onclick="registerUser()">Register</button>
+</div>
+
+<!-- MEETING INPUT -->
+<div class="card">
+    <div class="section-title">Upload Meeting Data</div>
+
+    <label>Upload Transcript</label>
+    <input type="file">
+
+    <label>Upload Image</label>
+    <input type="file" accept="image/*" onchange="previewImage(event)">
+    <div id="imagePreview"></div>
+
+    <label>Or Enter Text Manually</label>
+    <textarea id="manualTranscript" rows="6" placeholder="Paste meeting transcript here..."></textarea>
+
+    <button onclick="generateMOM()">Generate MOM</button>
+</div>
+
+<!-- ZOOM TRANSCRIPT -->
+<div class="card">
+    <div class="section-title">Zoom Transcript</div>
+    <button onclick="loadZoomTranscript()">Load Zoom Transcript</button>
+    <textarea id="zoomTranscript" rows="6" placeholder="Zoom transcript will appear here..."></textarea>
+</div>
+
+<!-- MOM OUTPUT -->
+<div class="card">
+    <div class="section-title">Generated Minutes of Meeting</div>
+
+    <p><strong>Discussion Points:</strong></p>
+    <ul id="discussionList"></ul>
+
+    <p><strong>Decisions Taken:</strong></p>
+    <ul id="decisionList"></ul>
+
+    <p><strong>Action Items:</strong></p>
+    <ul id="actionList"></ul>
+
+    <p><strong>Open Points:</strong></p>
+    <ul id="openList"></ul>
+
+    <button onclick="downloadPDF()">Download PDF</button>
+</div>
+
+<!-- TOTAL MEETINGS (AUTO CALCULATE) -->
+<div class="card">
+    <div class="section-title">Total Meetings Calculator</div>
+
+    <label>Offline Meetings</label>
+    <input type="number" id="offlineMeetingsInput">
+
+    <label>Zoom Meetings</label>
+    <input type="number" id="zoomMeetingsInput">
+
+    <label>Other Online Meetings</label>
+    <input type="number" id="onlineMeetingsInput">
+
+    <p id="meetingResult"></p>
+</div>
+
+<!-- DASHBOARD -->
+<div class="card">
+    <div class="section-title">Dashboard</div>
+    <div class="dashboard-box">
+        <div class="stat">
+            <h3 id="meetingsCount">0</h3>
+            <p>Total Meetings</p>
+        </div>
+        <div class="stat">
+            <h3 id="offlineCount">0</h3>
+            <p>Offline Meetings</p>
+        </div>
+        <div class="stat">
+            <h3 id="zoomCount">0</h3>
+            <p>Zoom Meetings</p>
+        </div>
+        <div class="stat">
+            <h3 id="onlineCount">0</h3>
+            <p>Other Online Meetings</p>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+
+// IMAGE PREVIEW
+function previewImage(event) {
+    const file = event.target.files[0];
+    const previewDiv = document.getElementById("imagePreview");
+    previewDiv.innerHTML = "";
+
+    if (file) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.maxWidth = "100%";
+        img.style.marginTop = "10px";
+        previewDiv.appendChild(img);
+    }
+}
+
+// LOAD ZOOM TRANSCRIPT (SIMULATION)
+async function loadZoomTranscript() {
+    const sampleText = "Project discussion\nBudget approval\nDeadline finalized";
+    document.getElementById("zoomTranscript").value = sampleText;
+    alert("Zoom transcript loaded!");
+}
+
+// GENERATE MOM
+function generateMOM() {
+
+    const manualText = document.getElementById("manualTranscript").value;
+    const zoomText = document.getElementById("zoomTranscript").value;
+
+    const transcript = manualText || zoomText;
+
+    const lines = transcript.split("\n").filter(line => line.trim() !== "");
+
+    let discussionHTML = "";
+    lines.forEach(line => {
+        discussionHTML += `<li>${line}</li>`;
+    });
+
+    document.getElementById("discussionList").innerHTML = discussionHTML;
+    document.getElementById("decisionList").innerHTML = "<li>Approved next phase</li>";
+    document.getElementById("actionList").innerHTML = "<li>Team to submit report</li>";
+    document.getElementById("openList").innerHTML = "<li>Vendor confirmation pending</li>";
+
+    // Auto increase meeting count
+    let totalMeetings = parseInt(document.getElementById("meetingsCount").innerText) || 0;
+    totalMeetings++;
+    document.getElementById("meetingsCount").innerText = totalMeetings;
+}
+
+// AUTO CALCULATE MEETINGS
+function calculateMeetings() {
+    const offline = parseInt(document.getElementById("offlineMeetingsInput").value) || 0;
+    const zoom = parseInt(document.getElementById("zoomMeetingsInput").value) || 0;
+    const online = parseInt(document.getElementById("onlineMeetingsInput").value) || 0;
+
+    const total = offline + zoom + online;
+
+    document.getElementById("meetingResult").innerHTML =
+        `Total Meetings: ${total}<br>
+         Offline Meetings: ${offline}<br>
+         Zoom Meetings: ${zoom}<br>
+         Other Online Meetings: ${online}`;
+
+    document.getElementById("meetingsCount").innerText = total;
+    document.getElementById("offlineCount").innerText = offline;
+    document.getElementById("zoomCount").innerText = zoom;
+    document.getElementById("onlineCount").innerText = online;
+}
+
+// EVENT LISTENERS (AUTO UPDATE)
+document.getElementById("offlineMeetingsInput").addEventListener("input", calculateMeetings);
+document.getElementById("zoomMeetingsInput").addEventListener("input", calculateMeetings);
+document.getElementById("onlineMeetingsInput").addEventListener("input", calculateMeetings);
+
+// PLACEHOLDER FUNCTIONS
+function downloadPDF() {
+    alert("PDF feature will be connected to backend.");
+}
+function registerUser() {
+    alert("Registration not implemented.");
+}
+
+</script>
+
+</body>
+</html>
